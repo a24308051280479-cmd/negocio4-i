@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital CERULEDOVEGA</title>
+    <style>
+        /* Estilos Generales */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Encabezado */
+        header {
+            background-color: white;
+            padding: 20px;
+        }
+
+        /* Contenedor de la imagen original */
+        .logo-img {
+            width: 180px; /* Ajusta el tamaño según prefieras */
+            height: auto;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0;
+            color: black;
+            text-transform: lowercase; /* Mantiene el estilo de la captura */
+        }
+
+        /* Cuerpo Principal (Sidebar + Contenido) */
+        .main-container {
+            display: flex;
+            flex: 1; 
+        }
+
+        /* Barra Lateral */
+        nav {
+            width: 250px;
+            background-color: #cccccc; 
+            padding: 30px 20px;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav ul li {
+            margin-bottom: 5px;
+        }
+
+        nav ul li a {
+            text-decoration: underline;
+            color: #4b0082; 
+            font-size: 18px;
+        }
+
+        /* Contenido Principal */
+        main {
+            flex: 1;
+            background-color: #eeeeee; 
+            padding: 40px;
+        }
+
+        main h2 {
+            font-size: 36px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        main p {
+            font-size: 18px;
+            line-height: 1.4;
+            max-width: 600px;
+        }
+
+        /* Pie de página */
+        footer {
+            background-color: #777777; 
+            color: white;
+            text-align: center;
+            padding: 25px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="pokemon.png" alt="Logo Ceruledovega" class="logo-img">
+        <h1>hospital de especialidad CERULEDOVEGA</h1>
+    </header>
+
+    <div class="main-container">
+        <nav>
+            <ul>
+                <li><a href="#">inicio</a></li>
+                <li><a href="#">pacientes</a></li>
+                <li><a href="#">doctores</a></li>
+                <li><a href="#">citas</a></li>
+                <li><a href="#">historial</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <h2>inicio</h2>
+            <p>
+                Bienvenido a la pagina web del hospital de especialidad 
+                CERULEDOVEGA aqui le brindaremos toda la informacion 
+                que necesita.
+            </p>
+        </main>
+    </div>
+
+    <footer>
+        <div>Luis Daniel Aguilar Mena</div>
+        <div>24308051280479</div>
+        <div>4° i</div>
+        <div>programacion</div>
+    </footer>
+
+</body>
+</html>
