@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jua:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Agenda y Control de Citas - Hospital CERULEDOVEGA</title>
+</head>
+<body>
+
+<header>
+    <div class="logo-top-left">
+        <img src="pokemon2.png" alt="Logo Pokémon" class="img-logo">
+    </div>
+
+    <h1>Agenda de Citas - Hospital CERULEDOVEGA</h1>
+    <p id="header-desc">Asignación y gestión de citas médicas en tiempo real utilizando almacenamiento local (localStorage).</p>
+    <nav class="navbar">
+        <a href="negocio2.html">Inicio</a>
+        <a href="pacientes.html">Registro de Pacientes</a>
+        <a href="medicos.html">Registro de Médicos</a>
+        <a href="citas.html" class="active">Agenda de Citas</a>
+        <a href="historial.html">Historial Clínico</a>
+    </nav>
+</header>
+
+<main>
+    <div class="form-container">
+        <h2 id="form-title">Agendar Nueva Cita Médica</h2>
+        
+        <form id="form-cita">
+            <div class="form-group">
+                <label for="paciente">Paciente:</label>
+                <input type="text" id="paciente" required placeholder="Ej. Alejandro Ruiz">
+            </div>
+
+            <div class="form-group">
+                <label for="medico">Médico Asignado:</label>
+                <input type="text" id="medico" required placeholder="Ej. Elena Martínez">
+            </div>
+
+            <div class="form-group">
+                <label for="fecha">Fecha de la Cita:</label>
+                <input type="date" id="fecha" required>
+            </div>
+
+            <div class="form-group">
+                <label for="hora">Hora de la Cita:</label>
+                <input type="time" id="hora" required>
+            </div>
+
+            <div class="form-group">
+                <label for="motivo">Motivo de la Consulta:</label>
+                <input type="text" id="motivo" required placeholder="Ej. Chequeo general anual">
+            </div>
+
+            <div class="form-group">
+                <label for="estado">Estado Inicial:</label>
+                <select id="estado" required>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="completa">Completa</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-submit">Registrar e Indexar Cita</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h3>Panel de Control: Registro de Citas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Cita</th>
+                    <th>Paciente</th>
+                    <th>Médico</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body-citas">
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer>
+    <p><strong>Negocio:</strong> Hospital de Especialidad CERULEDOVEGA</p>
+    <p><strong>Autor:</strong> Luis Daniel Aguilar Mena</p>
+    <p><strong>Submódulo:</strong> Bases de Datos No Relacionales</p>
+    <p><strong>Docente:</strong> M.E.E. Leticia Meza Díaz</p>
+</footer>
+
+<script>
+    const formCita = document.getElementById('form-cita');
+    const tablaBody = document.getElementById('tabla-body-citas');
+
+    function inicializarLocalStorageCitas() {
+        const citas = JSON.parse(localStorage.getItem('citas'));
+        if (!citas || citas.length === 0) {
+            const citasDefecto = [
+            ];
+            localStorage.setItem('citas', JSON.stringify(citasDefecto));
+        }
+    }
+
+    function cargarCitas() {
+        inicializarLocalStorageCitas();
+        const citas = JSON.parse(localStorage.getItem('citas')) || [];
+        
+        tablaBody.innerHTML = ''; 
+
+        citas.forEach((cita, index) => {
+            const fila = document.createElement('tr');
+            
+            fila.innerHTML = `
+                <td>${cita.id_cita}</td>
+                <td class="editable" data-key="paciente">${cita.paciente}</td>
+                <td class="editable" data-key="medico">${cita.medico}</td>
+                <td class="editable" data-key="fecha">${cita.fecha}</td>
+                <td class="editable" data-key="hora">${cita.hora}</td>
+                <td class="editable" data-key="motivo">${cita.motivo}</td>
+                <td class="editable" data-key="estado"><span class="status ${cita.estado}">${cita.estado}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-edit" onclick="alternarEdicionCita(this, ${index})">Editar registro de citas</button>
+                        <button type="button" class="btn-delete" onclick="eliminarCita(${index})">Eliminar este registro</button>
+                    </div>
+                </td>
+            `;
+            
+            tablaBody.appendChild(fila);
+        });
+    }
+
+
+    function alternarEdicionCita(boton, index) {
+        const fila = boton.closest('tr');
+        const celdasEditables = fila.querySelectorAll('.editable');
+        const estaEditando = fila.classList.toggle('row-editing');
+
+        if (estaEditando) {
+            boton.textContent = 'Guardar';
+            boton.classList.add('btn-save');
+
+            celdasEditables.forEach(celda => {
+                const clave = celda.getAttribute('data-key');
+                let valorActual = celda.textContent.trim();
+
+                if (clave === 'estado') {
+                    celda.innerHTML = `
+                        <select>
+                            <option value="pendiente" ${valorActual === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                            <option value="completa" ${valorActual === 'completa' ? 'selected' : ''}>Completa</option>
+                            <option value="cancelada" ${valorActual === 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                        </select>
+                    `;
+                } else if (clave === 'fecha') {
+                    celda.innerHTML = `<input type="date" value="${valorActual}">`;
+                } else if (clave === 'hora') {
+                    celda.innerHTML = `<input type="time" value="${valorActual}">`;
+                } else {
+                    celda.innerHTML = `<input type="text" value="${valorActual}">`;
+                }
+            });
+        } else {
+
+            const citas = JSON.parse(localStorage.getItem('citas')) || [];
+            const cita = citas[index];
+
+            celdasEditables.forEach(celda => {
+                const clave = celda.getAttribute('data-key');
+                const elementoInput = celda.querySelector('input, select');
+                if (elementoInput) {
+                    cita[clave] = elementoInput.value;
+                }
+            });
+
+            localStorage.setItem('citas', JSON.stringify(citas));
+            alert('¡El registro del paciente en la agenda ha sido modificado y guardado con éxito!');
+            
+            cargarCitas(); 
+        }
+    }
+
+    function eliminarCita(index) {
+        if (confirm('¿Está seguro de que desea remover permanentemente esta cita médica de la agenda?')) {
+            const citas = JSON.parse(localStorage.getItem('citas')) || [];
+            
+            citas.splice(index, 1);
+            
+            localStorage.setItem('citas', JSON.stringify(citas));
+            
+            cargarCitas();
+        }
+    }
+
+    formCita.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const citas = JSON.parse(localStorage.getItem('citas')) || [];
+        
+        let nuevoId = "C_1001";
+
+        if (citas.length > 0) {
+            const ultimoId = citas[citas.length - 1].id_cita;
+            const numeroActual = parseInt(ultimoId.split('_')[1]);
+            nuevoId = `C_${numeroActual + 1}`;
+        } else {
+            nuevoId = "C_1005";
+        }
+
+        const nuevaCita = {
+            id_cita: nuevoId,
+            paciente: document.getElementById('paciente').value,
+            medico: document.getElementById('medico').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value,
+            motivo: document.getElementById('motivo').value,
+            estado: document.getElementById('estado').value
+        };
+
+        citas.push(nuevaCita);
+        localStorage.setItem('citas', JSON.stringify(citas));
+
+        alert(`¡Cita agendada con éxito! Se asignó automáticamente el ID: ${nuevoId}`);
+
+        cargarCitas(); 
+        formCita.reset(); 
+    });
+
+    document.addEventListener('DOMContentLoaded', cargarCitas);
+</script>
+
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Poppins", sans-serif;
+        background-color: #fcfbf2; 
+        margin: 0; padding: 0;
+        display: flex; flex-direction: column;
+        align-items: center; min-height: 100vh;
+    }
+    header {
+        background-color: #228B22; color: white;
+        width: 100%; padding: 30px 0; text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .logo-top-left {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+    }
+    .img-logo {
+        width: 120px;
+        height: auto;
+        display: block;
+    }
+
+    h1 {
+        font-family: 'Jua', sans-serif; margin: 0;
+        font-size: 2.2rem; color: #00FF00; 
+        margin-top: 10px;
+    }
+    header p { opacity: 0.9; margin-top: 10px; padding: 0 20px; }
+    .navbar {
+        margin-top: 20px; background-color: #808000;
+        padding: 10px 0; width: 100%; text-align: center;
+    }
+    .navbar a {
+        color: #ffffff; text-decoration: none; margin: 0 15px;
+        font-weight: 500; font-size: 14px; transition: color 0.3s ease;
+    }
+    .navbar a:hover, .navbar a.active { color: #00FF00; }
+    
+    main {
+        display: flex; flex-direction: column; align-items: center;
+        width: 100%; padding: 40px 20px; flex: 1;
+        gap: 40px; 
+    }
+    
+    .form-container {
+        max-width: 600px; width: 100%;
+        background: white; padding: 35px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #dfb31a; 
+    }
+    .form-container h2 {
+        margin-top: 0; color: #b58900; font-size: 20px;
+        border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label {
+        display: block; margin-bottom: 5px; color: #2c3e50;
+        font-size: 14px; font-weight: 500;
+    }
+    .form-group input, .form-group select {
+        width: 100%; padding: 10px; border: 1px solid #e2e8f0;
+        border-radius: 6px; font-family: "Poppins", sans-serif; font-size: 14px;
+    }
+    .btn-submit {
+        background-color: #dfb31a; color: white; border: none;
+        width: 100%; padding: 12px; font-size: 16px; font-weight: 600;
+        border-radius: 6px; cursor: pointer; margin-top: 15px;
+        transition: background-color 0.2s; font-family: "Poppins", sans-serif;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+
+    .table-container {
+        max-width: 1300px; width: 100%;
+        background-color: #ffffff;
+        padding: 25px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #b58900;
+        overflow-x: auto;
+    }
+    .table-container h3 {
+        margin-top: 0; color: #b58900; font-size: 20px;
+        border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    table {
+        width: 100%; border-collapse: collapse;
+        margin: 10px 0; font-size: 13px;
+    }
+    th {
+        background-color: #dfb31a; color: white;
+        text-align: left; padding: 12px; font-weight: 600;
+        text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    td {
+        padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #4a5568;
+        vertical-align: middle;
+    }
+    tr:nth-child(even) { background-color: #fdfdf7; }
+    tr:hover { background-color: #f7f5e6; transition: background-color 0.2s ease; }
+
+    .status {
+        display: inline-block;
+        padding: 4px 8px; border-radius: 4px;
+        font-size: 11px; font-weight: bold;
+        text-transform: capitalize;
+    }
+    .pendiente { background-color: #fef3c7; color: #d97706; }
+    .completa { background-color: #d1fae5; color: #059669; }
+    .cancelada { background-color: #fee2e2; color: #dc2626; }
+
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-edit {
+        background-color: #ff9800; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-edit:hover { background-color: #e65100; }
+    
+    .btn-save { background-color: #2e7d32 !important; }
+    .btn-save:hover { background-color: #1b5e20 !important; }
+
+    .btn-delete {
+        background-color: #dc3545; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-delete:hover { background-color: #bd2130; }
+
+    .row-editing td input, .row-editing td select {
+        width: 100%; padding: 5px; font-size: 13px;
+        font-family: "Poppins", sans-serif; border: 1px solid #ff9800;
+        border-radius: 4px; background-color: #fffdec;
+    }
+
+    footer {
+        width: 100%; background-color: #f8fafc; padding: 20px 0;
+        text-align: center; font-size: 13px; color: #627d98;
+        border-top: 1px solid #e2e8f0; margin-top: auto;
+    }
+    footer p { margin: 4px 0; }
+</style>
+</body>
+</html>

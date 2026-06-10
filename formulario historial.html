@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jua:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Historial Clínico - Hospital CERULEDOVEGA</title>
+</head>
+<body>
+
+<header>
+    <div class="logo-top-left">
+        <img src="pokemon2.png" alt="Logo Pokémon" class="img-logo">
+    </div>
+
+    <h1>Historial Clínico - Hospital CERULEDOVEGA</h1>
+    <p id="header-desc">Favor de llenar el formulario con los datos clínicos para registrar el historial del paciente en el almacenamiento local (localStorage).</p>
+    <nav class="navbar">
+        <a href="negocio2.html">Inicio</a>
+        <a href="pacientes.html">Pacientes</a>
+        <a href="medicos.html">Médicos</a>
+        <a href="citas.html">Agenda de Citas</a>
+        <a href="historial.html" class="active">Historial Clínico</a>
+    </nav>
+</header>
+
+<main>
+    <div class="form-container">
+        <h2 id="form-title">Registro de Historial Clínico</h2>
+        
+        <form id="form-historial">
+            <div class="form-group">
+                <label for="paciente">Paciente (Nombre o ID):</label>
+                <input type="text" id="paciente" required placeholder="Ej. Alejandro Ruiz">
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_visita">Fecha de Visita:</label>
+                <input type="date" id="fecha_visita" required>
+            </div>
+
+            <div class="form-group">
+                <label for="diagnostico">Diagnóstico Médico:</label>
+                <input type="text" id="diagnostico" required placeholder="Ej. Hipertensión">
+            </div>
+
+            <div class="form-group">
+                <label for="tratamiento">Tratamiento Sugerido:</label>
+                <input type="text" id="tratamiento" required placeholder="Ej. Enalapril 10mg/día">
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-submit">Registrar Historial</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h3>Módulo Médico: Catálogo de Historiales</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Historial</th>
+                    <th>Paciente</th>
+                    <th>Fecha de Visita</th>
+                    <th>Diagnóstico</th>
+                    <th>Tratamiento</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body-historial">
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer>
+    <p><strong>Negocio:</strong> Hospital de Especialidad CERULEDOVEGA</p>
+    <p><strong>Autor:</strong> Luis Daniel Aguilar Mena</p>
+    <p><strong>Submódulo:</strong> Bases de Datos No Relacionales</p>
+    <p><strong>Docente:</strong> M.E.E. Leticia Meza Díaz</p>
+</footer>
+
+<script>
+    const formHistorial = document.getElementById('form-historial');
+    const tablaBody = document.getElementById('tabla-body-historial');
+
+    function inicializarLocalStorageHistoriales() {
+        const historiales = JSON.parse(localStorage.getItem('historiales'));
+        if (!historiales || historiales.length === 0) {
+            const historialesDefecto = [
+            ];
+            // Normalizar clave para consistencia
+            historialesDefecto.forEach(h => {
+                if(h.treatment) { h.tratamiento = h.treatment; delete h.treatment; }
+            });
+            localStorage.setItem('historiales', JSON.stringify(historialesDefecto));
+        }
+    }
+
+    function cargarHistoriales() {
+        inicializarLocalStorageHistoriales();
+        const historiales = JSON.parse(localStorage.getItem('historiales')) || [];
+        
+        tablaBody.innerHTML = ''; 
+
+        historiales.forEach((historial, index) => {
+            const fila = document.createElement('tr');
+            
+            fila.innerHTML = `
+                <td>${historial.id_historial}</td>
+                <td class="editable" data-key="paciente">${historial.paciente}</td>
+                <td class="editable" data-key="fecha_visita">${historial.fecha_visita}</td>
+                <td class="editable" data-key="diagnostico">${historial.diagnostico}</td>
+                <td class="editable" data-key="tratamiento">${historial.tratamiento}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-edit" onclick="alternarEdicionHistorial(this, ${index})">Editar historial</button>
+                        <button type="button" class="btn-delete" onclick="eliminarHistorial(${index})">Eliminar este registro</button>
+                    </div>
+                </td>
+            `;
+            
+            tablaBody.appendChild(fila);
+        });
+    }
+
+    function alternarEdicionHistorial(boton, index) {
+        const fila = boton.closest('tr');
+        const celdasEditables = fila.querySelectorAll('.editable');
+        const estaEditando = fila.classList.toggle('row-editing');
+
+        if (estaEditando) {
+            boton.textContent = 'Guardar';
+            boton.classList.add('btn-save');
+
+            celdasEditables.forEach(celda => {
+                const valorActual = celda.textContent.trim();
+                const clave = celda.getAttribute('data-key');
+
+                if (clave === 'fecha_visita') {
+                    celda.innerHTML = `<input type="date" value="${valorActual}">`;
+                } else {
+                    celda.innerHTML = `<input type="text" value="${valorActual}">`;
+                }
+            });
+        } else {
+            const historiales = JSON.parse(localStorage.getItem('historiales')) || [];
+            const historial = historiales[index];
+
+            celdasEditables.forEach(celda => {
+                const clave = celda.getAttribute('data-key');
+                const elementoInput = celda.querySelector('input');
+                if (elementoInput) {
+                    historial[clave] = elementoInput.value;
+                }
+            });
+
+            localStorage.setItem('historiales', JSON.stringify(historiales));
+            alert('¡El registro del historial clínico se ha actualizado y guardado correctamente!');
+            
+            cargarHistoriales();
+        }
+    }
+
+    function eliminarHistorial(index) {
+        if (confirm('¿Está seguro de que desea eliminar permanentemente este historial clínico?')) {
+            const historiales = JSON.parse(localStorage.getItem('historiales')) || [];
+            
+            historiales.splice(index, 1);
+            
+
+            localStorage.setItem('historiales', JSON.stringify(historiales));
+            
+            cargarHistoriales();
+        }
+    }
+
+    formHistorial.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const historiales = JSON.parse(localStorage.getItem('historiales')) || [];
+        
+        let nuevoId = "H_001";
+
+        if (historiales.length > 0) {
+            const ultimoId = historiales[historiales.length - 1].id_historial;
+            const numeroActual = parseInt(ultimoId.split('_')[1]);
+            nuevoId = `H_${String(numeroActual + 1).padStart(3, '0')}`;
+        } else {
+            nuevoId = "H_004";
+        }
+
+        const nuevoHistorial = {
+            id_historial: nuevoId,
+            paciente: document.getElementById('paciente').value,
+            fecha_visita: document.getElementById('fecha_visita').value,
+            diagnostico: document.getElementById('diagnostico').value,
+            tratamiento: document.getElementById('tratamiento').value
+        };
+
+        historiales.push(nuevoHistorial);
+        localStorage.setItem('historiales', JSON.stringify(historiales));
+
+        alert(`¡Historial clínico registrado con éxito! Se asignó automáticamente el ID: ${nuevoId}`);
+
+        cargarHistoriales(); 
+        formHistorial.reset(); 
+    });
+
+    document.addEventListener('DOMContentLoaded', cargarHistoriales);
+</script>
+
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Poppins", sans-serif;
+        background-color: #fdf6f6; 
+        margin: 0; padding: 0;
+        display: flex; flex-direction: column;
+        align-items: center; min-height: 100vh;
+    }
+    header {
+        background-color: #4B0082; color: white;
+        width: 100%; padding: 30px 0; text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        position: relative; 
+    }
+    
+    .logo-top-left {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+    }
+    .img-logo {
+        width: 120px;
+        height: auto;
+        display: block;
+    }
+
+    h1 {
+        font-family: 'Jua', sans-serif; margin: 0;
+        font-size: 2.2rem; color: #800080; 
+        margin-top: 10px;
+    }
+    header p { opacity: 0.9; margin-top: 10px; padding: 0 20px; }
+    .navbar {
+        margin-top: 20px; background-color: #9370DB;
+        padding: 10px 0; width: 100%; text-align: center;
+    }
+    .navbar a {
+        color: #ffffff; text-decoration: none; margin: 0 15px;
+        font-weight: 500; font-size: 14px; transition: color 0.3s ease;
+    }
+    .navbar a:hover, .navbar a.active { color: #8A2BE2; }
+    
+    main {
+        display: flex; flex-direction: column; align-items: center;
+        width: 100%; padding: 40px 20px; flex: 1;
+        gap: 40px; 
+    }
+    
+    /* ESTILOS DEL FORMULARIO ADAPTADOS */
+    .form-container {
+        max-width: 600px; width: 100%;
+        background: white; padding: 35px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #4B0082; 
+    }
+    .form-container h2 {
+        margin-top: 0; color: #b83253; font-size: 20px;
+        border-bottom: 2px solid #4B0082; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label {
+        display: block; margin-bottom: 5px; color: #2c3e50;
+        font-size: 14px; font-weight: 500;
+    }
+    .form-group input {
+        width: 100%; padding: 10px; border: 1px solid #e2e8f0;
+        border-radius: 6px; font-family: "Poppins", sans-serif; font-size: 14px;
+    }
+    .btn-submit {
+        background-color: #4B0082; color: white; border: none;
+        width: 100%; padding: 12px; font-size: 16px; font-weight: 600;
+        border-radius: 6px; cursor: pointer; margin-top: 15px;
+        transition: background-color 0.2s; font-family: "Poppins", sans-serif;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+
+    /* ESTILOS DE LA TABLA PUESTA ABAJO */
+    .table-container {
+        max-width: 1200px; width: 100%;
+        background-color: #ffffff;
+        padding: 25px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #4B0082; 
+        overflow-x: auto;
+    }
+    .table-container h3 {
+        margin-top: 0; color: #4B0082; font-size: 20px;
+        border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    table {
+        width: 100%; border-collapse: collapse;
+        margin: 10px 0; font-size: 14px;
+    }
+    th {
+        background-color: #4B0082; color: white;
+        text-align: left; padding: 12px; font-weight: 600;
+        text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    td {
+        padding: 12px; border-bottom: 1px solid #e2e8f0; color: #4a5568;
+        vertical-align: middle;
+    }
+    tr:nth-child(even) { background-color: #fffafb; }
+    tr:hover { background-color: #fce8ec; transition: background-color 0.2s ease; }
+
+    /* CONTENEDOR FLEXIBLE DE BOTONES HORIZONTALES */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    /* ESTILOS DE LOS BOTONES INTERACTIVOS */
+    .btn-edit {
+        background-color: #ff9800; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-edit:hover { background-color: #e65100; }
+    
+    .btn-save { background-color: #2e7d32 !important; }
+    .btn-save:hover { background-color: #1b5e20 !important; }
+
+    .btn-delete {
+        background-color: #dc3545; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-delete:hover { background-color: #c82333; }
+
+    /* Estilos para las cajas de texto cuando la fila horizontal está activa en edición */
+    .row-editing td input {
+        width: 100%; padding: 5px; font-size: 13px;
+        font-family: "Poppins", sans-serif; border: 1px solid #ff9800;
+        border-radius: 4px; background-color: #fffdec;
+    }
+
+    footer {
+        width: 100%; background-color: #f8fafc; padding: 20px 0;
+        text-align: center; font-size: 13px; color: #627d98;
+        border-top: 1px solid #e2e8f0; margin-top: auto;
+    }
+    footer p { margin: 4px 0; }
+</style>
+</body>
+</html>

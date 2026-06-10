@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jua:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Registro y Catálogo de Pacientes - Hospital CERULEDOVEGA</title>
+</head>
+<body>
+
+<header>
+    <div id="logo-container">
+        <img src="pokemon2.png" alt="Logo de Pokemon" id="header-logo">
+    </div>
+    
+    <h1>Catálogo de Pacientes - Hospital CERULEDOVEGA</h1>
+    <p id="header-desc">Inserción de nuevos pacientes en tiempo real utilizando almacenamiento local (localStorage).</p>
+    <nav class="navbar">
+        <a href="negocio2.html">Inicio</a>
+        <a href="pacientes.html" class="active">Registro de Pacientes</a>
+        <a href="medicos.html">Registro de Médicos</a>
+        <a href="citas.html">Agenda de Citas</a>
+        <a href="historial.html">Historial Clínico</a>
+    </nav>
+</header>
+
+<main>
+    <div class="form-container">
+        <h2 id="form-title">Formulario de Registro de Pacientes</h2>
+        
+        <form id="form-paciente">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" required placeholder="Ej. Juan">
+            </div>
+
+            <div class="form-group">
+                <label for="apellidos">Apellidos:</label>
+                <input type="text" id="apellidos" required placeholder="Ej. Pérez Gómez">
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_nac">Fecha de Nacimiento:</label>
+                <input type="date" id="fecha_nac" required>
+            </div>
+
+            <div class="form-group">
+                <label for="genero">Género:</label>
+                <select id="genero" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="grupo_sangre">Grupo Sanguíneo:</label>
+                <input type="text" id="grupo_sangre" required placeholder="Ej. O+, A-">
+            </div>
+
+            <div class="form-group">
+                <label for="alergia">Alergias:</label>
+                <input type="text" id="alergia" placeholder="Ej. Penicilina (o dejar vacío si no tiene)">
+            </div>
+
+            <div class="form-group">
+                <label for="doctor">Doctor Asignado:</label>
+                <input type="text" id="doctor" required placeholder="Ej. García López">
+            </div>
+
+            <div class="form-group">
+                <label for="medicamento">Medicamento:</label>
+                <input type="text" id="medicamento" required placeholder="Ej. Paracetamol">
+            </div>
+
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="dosis">Dosis (Pz):</label>
+                    <input type="number" id="dosis" required min="1" value="1">
+                </div>
+                <div style="flex: 1;">
+                    <label for="frecuencia">Frecuencia:</label>
+                    <input type="text" id="frecuencia" required placeholder="Ej. 8 horas">
+                </div>
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-submit">Guardar Paciente Localmente</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h3>Visualización de Pacientes Registrados</h3>
+        <table class="tabla-pacientes">
+            <thead>
+                <tr>
+                    <th>ID Paciente</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Fecha de Nacimiento</th>
+                    <th>Género</th>
+                    <th>Grupo Sanguíneo</th>
+                    <th>Alergia</th>
+                    <th>Doctor Asignado</th>
+                    <th>Medicamento</th>
+                    <th>Dosis</th>
+                    <th>Frecuencia</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body-nosql">
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer>
+    <p><strong>Negocio:</strong> Hospital de Especialidad CERULEDOVEGA</p>
+    <p><strong>Autor:</strong> Luis Daniel Aguilar Mena</p>
+    <p><strong>Submódulo:</strong> Bases de Datos No Relacionales</p>
+    <p><strong>Docente:</strong> M.E.E. Leticia Meza Díaz</p>
+</footer>
+
+<script>
+  const formPaciente = document.getElementById('form-paciente');
+  const tablaBody = document.getElementById('tabla-body-nosql');
+
+  function inicializarLocalStorage() {
+      const pacientes = JSON.parse(localStorage.getItem('pacientes'));
+      if (!pacientes || pacientes.length === 0) {
+          const pacientesDefecto = [
+          ];
+          localStorage.setItem('pacientes', JSON.stringify(pacientesDefecto));
+      }
+  }
+
+  function cargarPacientes() {
+      inicializarLocalStorage();
+      const pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
+      
+      tablaBody.innerHTML = ''; 
+
+      pacientes.forEach((paciente, index) => {
+          const fila = document.createElement('tr');
+          fila.setAttribute('data-index', index);
+          
+          fila.innerHTML = `
+              <td>${paciente.id_paciente}</td>
+              <td class="editable" data-key="nombre">${paciente.nombre}</td>
+              <td class="editable" data-key="apellidos">${paciente.apellidos}</td>
+              <td class="editable" data-key="fecha_nac">${paciente.fecha_nac}</td>
+              <td class="editable" data-key="genero">${paciente.genero}</td>
+              <td class="editable" data-key="grupo_sangre">${paciente.grupo_sangre}</td>
+              <td class="editable" data-key="alergia">${paciente.alergia}</td>
+              <td class="editable" data-key="doctor">${paciente.doctor}</td>
+              <td class="editable" data-key="medicamento">${paciente.medicamento}</td>
+              <td class="editable" data-key="dosis">${paciente.dosis} Pz</td>
+              <td class="editable" data-key="frecuencia">${paciente.frecuencia}</td>
+              <td>
+                  <div class="action-buttons">
+                      <button class="btn-edit" onclick="alternarEdicionFila(this, ${index})">Editar registro de pacientes</button>
+                      <button class="btn-delete" onclick="eliminarFila(${index})">Eliminar este registro</button>
+                  </div>
+              </td>
+          `;
+          
+          tablaBody.appendChild(fila);
+      });
+  }
+
+  function alternarEdicionFila(boton, index) {
+      const fila = boton.closest('tr');
+      const celdasEditables = fila.querySelectorAll('.editable');
+      const esModoEdicion = fila.classList.toggle('editing-row');
+
+      if (esModoEdicion) {
+          boton.textContent = 'Guardar';
+          boton.classList.add('btn-save');
+
+          celdasEditables.forEach(celda => {
+              const valorActual = celda.textContent.replace(' Pz', '');
+              const key = celda.getAttribute('data-key');
+              
+              if (key === 'genero') {
+                  celda.innerHTML = `
+                      <select>
+                          <option value="Masculino" ${valorActual === 'Masculino' ? 'selected' : ''}>Masculino</option>
+                          <option value="Femenino" ${valorActual === 'Femenino' ? 'selected' : ''}>Femenino</option>
+                          <option value="Otro" ${valorActual === 'Otro' ? 'selected' : ''}>Otro</option>
+                      </select>
+                  `;
+              } else if (key === 'fecha_nac') {
+                  celda.innerHTML = `<input type="date" value="${valorActual}">`;
+              } else if (key === 'dosis') {
+                  celda.innerHTML = `<input type="number" value="${valorActual}" min="1">`;
+              } else {
+                  celda.innerHTML = `<input type="text" value="${valorActual}">`;
+              }
+          });
+      } else {
+
+          const pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
+          const paciente = pacientes[index];
+
+          celdasEditables.forEach(celda => {
+              const key = celda.getAttribute('data-key');
+              const inputElement = celda.querySelector('input, select');
+              if (inputElement) {
+                  paciente[key] = inputElement.value;
+              }
+          });
+
+
+          localStorage.setItem('pacientes', JSON.stringify(pacientes));
+          alert('¡Registro de paciente actualizado correctamente!');
+          
+          cargarPacientes();
+      }
+  }
+
+
+  function eliminarFila(index) {
+      if (confirm('¿Está seguro de que desea eliminar permanentemente este registro de paciente?')) {
+          const pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
+          
+          pacientes.splice(index, 1);
+          
+          localStorage.setItem('pacientes', JSON.stringify(pacientes));
+          
+          cargarPacientes();
+      }
+  }
+
+  formPaciente.addEventListener('submit', (e) => {
+      e.preventDefault(); 
+
+      const pacientes = JSON.parse(localStorage.getItem('pacientes')) || [];
+      
+      let nuevoId = "P_001"; 
+
+      if (pacientes.length > 0) {
+          const ultimoId = pacientes[pacientes.length - 1].id_paciente; 
+          const numeroActual = parseInt(ultimoId.split('_')[1]);
+          nuevoId = `P_${String(numeroActual + 1).padStart(3, '0')}`;
+      } else {
+          nuevoId = "P_003";
+      }
+
+      const nuevoPaciente = {
+          id_paciente: nuevoId, 
+          nombre: document.getElementById('nombre').value,
+          apellidos: document.getElementById('apellidos').value,
+          fecha_nac: document.getElementById('fecha_nac').value,
+          genero: document.getElementById('genero').value,
+          grupo_sangre: document.getElementById('grupo_sangre').value,
+          alergia: document.getElementById('alergia').value || 'Ninguna',
+          doctor: document.getElementById('doctor').value,
+          medicamento: document.getElementById('medicamento').value,
+          dosis: document.getElementById('dosis').value,
+          frecuencia: document.getElementById('frecuencia').value
+      };
+
+      pacientes.push(nuevoPaciente);
+      localStorage.setItem('pacientes', JSON.stringify(pacientes));
+
+      alert(`¡Paciente registrado con éxito! Se asignó automáticamente el ID: ${nuevoId}`);
+      
+      cargarPacientes(); 
+      formPaciente.reset(); 
+  });
+
+  document.addEventListener('DOMContentLoaded', cargarPacientes);
+</script>
+
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f0f4f8; 
+        margin: 0; padding: 0;
+        display: flex; flex-direction: column;
+        align-items: center; min-height: 100vh;
+    }
+    header {
+        background-color: #FF4500; color: white;
+        width: 100%; padding: 30px 0; text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    h1 {
+        font-family: 'Jua', sans-serif; margin: 0;
+        font-size: 2.2rem; color: #FFFF00; 
+    }
+    header p { opacity: 0.9; margin-top: 10px; padding: 0 20px; }
+    
+
+    #logo-container {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+    #header-logo {
+        width: 110px;
+        height: auto;
+    }
+
+    .navbar {
+        margin-top: 20px; background-color: #FFA500;
+        padding: 10px 0; width: 100%; text-align: center;
+    }
+    .navbar a {
+        color: #ffffff; text-decoration: none; margin: 0 15px;
+        font-weight: 500; font-size: 14px; transition: color 0.3s ease;
+    }
+    .navbar a:hover, .navbar a.active { color: #FFFF00; }
+    
+    main {
+        display: flex; flex-direction: column; align-items: center;
+        width: 100%; padding: 40px 20px; flex: 1;
+        gap: 40px; 
+    }
+    
+    .form-container {
+        max-width: 600px; width: 100%;
+        background: white; padding: 35px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #FF4500; 
+    }
+    .form-container h2 {
+        margin-top: 0; color: #FF4500; font-size: 20px;
+        border-bottom: 2px solid #FF4500; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label {
+        display: block; margin-bottom: 5px; color: #334e68;
+        font-size: 14px; font-weight: 500;
+    }
+    .form-group input, .form-group select {
+        width: 100%; padding: 10px; border: 1px solid #e2e8f0;
+        border-radius: 6px; font-family: "Poppins", sans-serif; font-size: 14px;
+    }
+    .btn-submit {
+        background-color: #FF4500; color: white; border: none;
+        width: 100%; padding: 12px; font-size: 16px; font-weight: 600;
+        border-radius: 6px; cursor: pointer; margin-top: 15px;
+        transition: background-color 0.2s; font-family: "Poppins", sans-serif;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+
+    .table-container {
+        max-width: 1400px; width: 100%; 
+        background-color: #fff;
+        padding: 25px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #FF4500; 
+        overflow-x: auto; 
+    }
+    .table-container h3 {
+        margin-top: 0; color: #FF4500; font-size: 20px;
+        border-bottom: 2px solid #FF4500; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    table {
+        width: 100%; border-collapse: collapse;
+        margin: 10px 0; font-size: 13px;
+    }
+    th {
+        background-color: #FF4500; color: white;
+        text-align: left; padding: 12px; font-weight: 600;
+        white-space: nowrap;
+    }
+    td {
+        padding: 10px 12px; border-bottom: 1px solid #ddd; color: #333;
+        vertical-align: middle;
+    }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-edit {
+        background-color: #FFA500; color: white; border: none;
+        padding: 6px 10px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-edit:hover { background-color: #e69500; }
+    
+    .btn-save {
+        background-color: #2e7d32 !important;
+    }
+    .btn-save:hover { background-color: #1b5e20 !important; }
+
+    .btn-delete {
+        background-color: #dc3545; color: white; border: none;
+        padding: 6px 10px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-delete:hover { background-color: #bd2130; }
+
+    .editing-row td input, .editing-row td select {
+        width: 100%; padding: 5px; font-size: 13px;
+        font-family: "Poppins", sans-serif; border: 1px solid #ffa500;
+        border-radius: 4px;
+    }
+
+    footer {
+        width: 100%; background-color: #f8fafc; padding: 20px 0;
+        text-align: center; font-size: 13px; color: #627d98;
+        border-top: 1px solid #e2e8f0; margin-top: auto;
+    }
+    footer p { margin: 4px 0; }
+</style>
+</body>
+</html>

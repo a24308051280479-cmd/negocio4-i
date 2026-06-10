@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jua:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Registro y Directorio de Médicos - Hospital CERULEDOVEGA</title>
+</head>
+<body>
+
+<header>
+    <div class="logo-top-left">
+        <img src="pokemon2.png" alt="Logo Pokémon" class="img-logo">
+    </div>
+
+    <h1>Catálogo de Médicos - Hospital CERULEDOVEGA</h1>
+    <p id="header-desc">Formulario de registro para el personal médico. Ingrese los datos correspondientes para el alta en el almacenamiento local.</p>
+    <nav class="navbar">
+        <a href="negocio2.html">Inicio</a>
+        <a href="pacientes.html">Registro de Pacientes</a>
+        <a href="medicos.html" class="active">Registro de Médicos</a>
+        <a href="citas.html">Agenda de Citas</a>
+        <a href="historial.html">Historial Clínico</a>
+    </nav>
+</header>
+
+<main>
+    <div class="form-container">
+        <h2 id="form-title">Alta de Médico Especialista</h2>
+        
+        <form id="form-medico">
+            <div class="form-group">
+                <label for="nombre">Nombre(s):</label>
+                <input type="text" id="nombre" required placeholder="Ej. Alejandro">
+            </div>
+
+            <div class="form-group">
+                <label for="apellidos">Apellido(s):</label>
+                <input type="text" id="apellidos" required placeholder="Ej. Ruiz Esparza">
+            </div>
+
+            <div class="form-group">
+                <label for="especialidad">Especialidad:</label>
+                <input type="text" id="especialidad" required placeholder="Ej. Cardiología">
+            </div>
+
+            <div class="form-group">
+                <label for="turno">Turno:</label>
+                <select id="turno" required>
+                    <option value="">Seleccione un turno</option>
+                    <option value="Matutino">Matutino (Mañana)</option>
+                    <option value="Vespertino">Vespertino (Tarde)</option>
+                    <option value="Nocturno">Nocturno (Noche)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="disponibilidad">Disponibilidad:</label>
+                <input type="text" id="disponibilidad" required placeholder="Ej. Lunes a Miércoles">
+            </div>
+
+            <div class="form-group">
+                <label for="telefono">Teléfono de Contacto:</label>
+                <input type="tel" id="telefono" required placeholder="Ej. 555-0101">
+            </div>
+
+            <div class="form-group">
+                <label for="cedula">Cédula Profesional:</label>
+                <input type="text" id="cedula" required placeholder="Ej. 7172315">
+            </div>
+
+            <div class="form-group">
+                <label for="rfc">RFC:</label>
+                <input type="text" id="rfc" required placeholder="Ej. XAXX010101000">
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-submit">Registrar Médico</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h3>Directorio Clínico: Information de Médicos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Id médico</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Especialidad</th>
+                    <th>Turno</th>
+                    <th>Disponibilidad</th>
+                    <th>Teléfono</th>
+                    <th>Cédula profesional</th>
+                    <th>RFC</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body-medicos">
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer>
+    <p><strong>Negocio:</strong> Hospital de Especialidad CERULEDOVEGA</p>
+    <p><strong>Autor:</strong> Luis Daniel Aguilar Mena</p>
+    <p><strong>Submódulo:</strong> Bases de Datos No Relacionales</p>
+    <p><strong>Docente:</strong> M.E.E. Leticia Meza Díaz</p>
+</footer>
+
+<script>
+    const formMedico = document.getElementById('form-medico');
+    const tablaBody = document.getElementById('tabla-body-medicos');
+
+    function inicializarLocalStorageMedicos() {
+        const medicos = JSON.parse(localStorage.getItem('medicos'));
+        if (!medicos || medicos.length === 0) {
+            const medicosDefecto = [
+            ];
+            localStorage.setItem('medicos', JSON.stringify(medicosDefecto));
+        }
+    }
+
+    function cargarMedicos() {
+        inicializarLocalStorageMedicos();
+        const medicos = JSON.parse(localStorage.getItem('medicos')) || [];
+        
+        tablaBody.innerHTML = ''; 
+
+        medicos.forEach((medico, index) => {
+            const fila = document.createElement('tr');
+            
+            fila.innerHTML = `
+                <td>${medico.id_medico}</td>
+                <td class="editable" data-key="nombre">${medico.nombre}</td>
+                <td class="editable" data-key="apellidos">${medico.apellidos}</td>
+                <td class="editable" data-key="especialidad">${medico.especialidad}</td>
+                <td class="editable" data-key="turno">${medico.turno}</td>
+                <td class="editable" data-key="disponibilidad">${medico.disponibilidad}</td>
+                <td class="editable" data-key="telefono">${medico.telefono}</td>
+                <td class="editable" data-key="cedula">${medico.cedula}</td>
+                <td class="editable" data-key="rfc">${medico.rfc}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-edit" onclick="alternarEdicionMedico(this, ${index})">Editar registro de médicos</button>
+                        <button type="button" class="btn-delete" onclick="eliminarMedico(${index})">Eliminar este registro</button>
+                    </div>
+                </td>
+            `;
+            
+            tablaBody.appendChild(fila);
+        });
+    }
+
+    function alternarEdicionMedico(boton, index) {
+        const fila = boton.closest('tr');
+        const celdasEditables = fila.querySelectorAll('.editable');
+        const estaEditando = fila.classList.toggle('row-editing');
+
+        if (estaEditando) {
+            boton.textContent = 'Guardar';
+            boton.classList.add('btn-save');
+
+            celdasEditables.forEach(celda => {
+                const valorActual = celda.textContent;
+                const clave = celda.getAttribute('data-key');
+
+                if (clave === 'turno') {
+                    celda.innerHTML = `
+                        <select>
+                            <option value="Matutino" ${valorActual === 'Matutino' ? 'selected' : ''}>Matutino</option>
+                            <option value="Vespertino" ${valorActual === 'Vespertino' ? 'selected' : ''}>Vespertino</option>
+                            <option value="Nocturno" ${valorActual === 'Nocturno' ? 'selected' : ''}>Nocturno</option>
+                        </select>
+                    `;
+                } else {
+                    celda.innerHTML = `<input type="text" value="${valorActual}">`;
+                }
+            });
+        } else {
+
+            const medicos = JSON.parse(localStorage.getItem('medicos')) || [];
+            const medico = medicos[index];
+
+            celdasEditables.forEach(celda => {
+                const clave = celda.getAttribute('data-key');
+                const elementoInput = celda.querySelector('input, select');
+                if (elementoInput) {
+                    medico[clave] = elementoInput.value;
+                }
+            });
+
+
+            localStorage.setItem('medicos', JSON.stringify(medicos));
+            alert('¡Registro del personal médico guardado y actualizado con éxito!');
+            
+            cargarMedicos();
+        }
+    }
+
+    function eliminarMedico(index) {
+        if (confirm('¿Está seguro de que desea remover de forma permanente a este médico especialista del directorio?')) {
+            const medicos = JSON.parse(localStorage.getItem('medicos')) || [];
+            
+            medicos.splice(index, 1);
+            
+            localStorage.setItem('medicos', JSON.stringify(medicos));
+            
+            cargarMedicos();
+        }
+    }
+
+
+    formMedico.addEventListener('submit', (e) => {
+        e.preventDefault(); 
+
+        const medicos = JSON.parse(localStorage.getItem('medicos')) || [];
+        
+        let nuevoId = "Med_001";
+
+        if (medicos.length > 0) {
+            const ultimoId = medicos[medicos.length - 1].id_medico;
+            const numeroActual = parseInt(ultimoId.split('_')[1]);
+            nuevoId = `Med_${String(numeroActual + 1).padStart(3, '0')}`;
+        } else {
+            nuevoId = "Med_004";
+        }
+
+        const nuevoMedico = {
+            id_medico: nuevoId,
+            nombre: document.getElementById('nombre').value,
+            apellidos: document.getElementById('apellidos').value,
+            especialidad: document.getElementById('especialidad').value,
+            turno: document.getElementById('turno').value,
+            disponibilidad: document.getElementById('disponibilidad').value,
+            telefono: document.getElementById('telefono').value,
+            cedula: document.getElementById('cedula').value,
+            rfc: document.getElementById('rfc').value
+        };
+
+        medicos.push(nuevoMedico);
+        localStorage.setItem('medicos', JSON.stringify(medicos));
+
+        alert(`¡Médico especialista registrado con éxito! Se asignó automáticamente el ID: ${nuevoId}`);
+        
+        cargarMedicos(); 
+        formMedico.reset(); 
+    });
+
+    document.addEventListener('DOMContentLoaded', cargarMedicos);
+</script>
+
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Poppins", sans-serif;
+        background-color: #fcfbf2; 
+        margin: 0; padding: 0;
+        display: flex; flex-direction: column;
+        align-items: center; min-height: 100vh;
+    }
+    header {
+        background-color: #000080; color: white;
+        width: 100%; padding: 30px 0; text-align: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    
+
+    .logo-top-left {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+    }
+    .img-logo {
+        width: 120px;
+        height: auto;
+        display: block;
+    }
+
+    h1 {
+        font-family: 'Jua', sans-serif; margin: 0;
+        font-size: 2.2rem; color: #00BFFF; 
+        margin-top: 10px; /* Separación extra para equilibrar con el tamaño del logo */
+    }
+    header p { opacity: 0.9; margin-top: 10px; padding: 0 20px; }
+    .navbar {
+        margin-top: 20px; background-color: #191970;
+        padding: 10px 0; width: 100%; text-align: center;
+    }
+    .navbar a {
+        color: #ffffff; text-decoration: none; margin: 0 15px;
+        font-weight: 500; font-size: 14px; transition: color 0.3s ease;
+    }
+    .navbar a:hover, .navbar a.active { color: #ADD8E6; }
+    
+    main {
+        display: flex; flex-direction: column; align-items: center;
+        width: 100%; padding: 40px 20px; flex: 1;
+        gap: 40px; 
+    }
+    
+    .form-container {
+        max-width: 600px; width: 100%;
+        background: white; padding: 35px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #2b6cb0; 
+    }
+    .form-container h2 {
+        margin-top: 0; color: #1a365d; font-size: 20px;
+        border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label {
+        display: block; margin-bottom: 5px; color: #2c3e50;
+        font-size: 14px; font-weight: 500;
+    }
+    .form-group input, .form-group select {
+        width: 100%; padding: 10px; border: 1px solid #e2e8f0;
+        border-radius: 6px; font-family: "Poppins", sans-serif; font-size: 14px;
+    }
+    .btn-submit {
+        background-color: #2b6cb0; color: white; border: none;
+        width: 100%; padding: 12px; font-size: 16px; font-weight: 600;
+        border-radius: 6px; cursor: pointer; margin-top: 15px;
+        transition: background-color 0.2s; font-family: "Poppins", sans-serif;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+
+    .table-container {
+        max-width: 1300px; width: 100%; 
+        background-color: #ffffff;
+        padding: 25px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-top: 8px solid #1a365d;
+        overflow-x: auto;
+    }
+    .table-container h3 {
+        margin-top: 0; color: #1a365d; font-size: 20px;
+        border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; margin-bottom: 25px;
+    }
+    table {
+        width: 100%; border-collapse: collapse;
+        margin: 10px 0; font-size: 13px;
+    }
+    th {
+        background-color: #2b6cb0; color: white;
+        text-align: left; padding: 12px; font-weight: 600;
+        text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    td {
+        padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #4a5568;
+        vertical-align: middle;
+    }
+    tr:nth-child(even) { background-color: #f7fafc; }
+    tr:hover { background-color: #edf2f7; transition: background-color 0.2s ease; }
+
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-edit {
+        background-color: #ff9800; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-edit:hover { background-color: #e65100; }
+    
+    .btn-save {
+        background-color: #2e7d32 !important;
+    }
+    .btn-save:hover { background-color: #1b5e20 !important; }
+
+    .btn-delete {
+        background-color: #dc3545; color: white; border: none;
+        padding: 6px 12px; font-size: 11px; font-weight: 600;
+        border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
+        font-family: "Poppins", sans-serif; white-space: nowrap;
+    }
+    .btn-delete:hover { background-color: #bd2130; }
+
+    .row-editing td input, .row-editing td select {
+        width: 100%; padding: 5px; font-size: 13px;
+        font-family: "Poppins", sans-serif; border: 1px solid #ff9800;
+        border-radius: 4px; background-color: #fffdec;
+    }
+
+    footer {
+        width: 100%; background-color: #f8fafc; padding: 20px 0;
+        text-align: center; font-size: 13px; color: #627d98;
+        border-top: 1px solid #e2e8f0; margin-top: auto;
+    }
+    footer p { margin: 4px 0; }
+</style>
+</body>
+</html>
